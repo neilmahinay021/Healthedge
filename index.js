@@ -101,6 +101,34 @@ app.post('/api/add_vitals', (req, res) => {
   });
 });
 
+// UPDATE vitals by user_id
+app.put('/api/vitals', (req, res) => {
+  const { user_id, height, weight, blood_pressure, heart_rate, temperature } = req.body;
+
+  if (!user_id) {
+    return res.status(400).json({ error: "user_id is required" });
+  }
+
+  const sql = `
+    UPDATE vitals 
+    SET height = ?, weight = ?, blood_pressure = ?, heart_rate = ?, temperature = ?
+    WHERE user_id = ?
+  `;
+
+  const values = [height, weight, blood_pressure, heart_rate, temperature, user_id];
+
+  db.query(sql, values, (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "No vitals found for the given user_id" });
+    }
+
+    res.json({ message: "Vitals updated successfully" });
+  });
+});
+
+
 // POST register user
 app.post('/api/register_user', (req, res) => {
   const user = req.body;
