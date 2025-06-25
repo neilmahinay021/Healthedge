@@ -65,20 +65,34 @@ app.post('/api/add_diagnosis', (req, res) => {
   const diagnosis = req.body;
   db.query('INSERT INTO diagnoses SET ?', diagnosis, (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
-    
+
+    // Update vitals if present in the request
+    const { patient_code, weight, height, blood_pressure } = diagnosis;
+    if (patient_code && weight && height && blood_pressure) {
+      db.query(
+        'UPDATE vitals SET weight = ?, height = ?, blood_pressure = ? WHERE user_id = ?',
+        [weight, height, blood_pressure, patient_code],
+        (vitalsErr) => {
+          if (vitalsErr) {
+            // Optionally log or handle vitals update error
+            console.error('Failed to update vitals:', vitalsErr);
+          }
+        }
+      );
+    }
+
     // Create notification for the user
     const notification = {
       user_id: diagnosis.patient_code,
       message: `New diagnosis added: ${diagnosis.diagnosis}`,
       is_read: 0
     };
-    
     db.query('INSERT INTO notifications SET ?', notification, (notifErr) => {
       if (notifErr) {
         console.error('Failed to create notification:', notifErr);
       }
     });
-    
+
     res.json({ success: true, id: result.insertId });
   });
 });
@@ -100,7 +114,6 @@ app.post('/api/add_vitals', (req, res) => {
     res.json({ success: true, id: result.insertId });
   });
 });
-
 
 // UPDATE vitals by user_id
 app.put('/api/vitals', (req, res) => {
@@ -128,7 +141,6 @@ app.put('/api/vitals', (req, res) => {
     res.json({ message: "Vitals updated successfully" });
   });
 });
-
 
 
 // POST register user
