@@ -103,7 +103,7 @@ app.post('/api/add_vitals', (req, res) => {
 
 // UPDATE vitals by user_id
 app.put('/api/vitals', (req, res) => {
-  const { user_id, height, weight, blood_pressure, heart_rate, temperature } = req.body;
+  const { user_id, height, weight, blood_pressure, heart_rate, temperature, blood_oxygen, respiration_rate } = req.body;
 
   if (!user_id) {
     return res.status(400).json({ error: "user_id is required" });
